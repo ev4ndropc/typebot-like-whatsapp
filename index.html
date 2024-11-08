@@ -129,53 +129,48 @@
     </div>
 
     <script>
-        document.getElementById('configForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            try {
-                // Primeiro, busca o template.json atual
-                const response = await fetch('template.json');
-                const templateData = await response.json();
+document.getElementById('configForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
 
-                // Pegar valores do formulário
-                const backRedirect = document.getElementById('backRedirect').value;
-                const whatsappUrl = document.getElementById('whatsappUrl').value;
-                const avatarUrl = document.getElementById('avatarUrl').value;
-                const name = document.getElementById('name').value;
+    try {
+        const response = await fetch('template.json');
+        const templateData = await response.json();
 
-                // Atualiza o customHeadCode no template
-                const customHeadCode = templateData.settings.metadata.customHeadCode;
-                
-                // Substitui as URLs e o nome no customHeadCode
-                const updatedHeadCode = customHeadCode
-                    .replace(/window\.location\.href = "https:\/\/google\.com"/g, `window.location.href = "${backRedirect}"`)
-                    .replace(/https:\/\/wa\.me\/5522999039468/g, `https://wa.me/${whatsappUrl}`)
-                    .replace(/https:\/\/cursos\.gestaointeligente\.club\/_next\/image\?url=%2Fimages%2Ficon-banner\.png&w=640&q=100/g, avatarUrl)
-                    .replace(/<span>Evandro<\/span>/g, `<span>${name}</span>`);
+        const backRedirect = document.getElementById('backRedirect').value;
+        const whatsappUrl = document.getElementById('whatsappUrl').value;
+        const avatarUrl = document.getElementById('avatarUrl').value;
+        const name = document.getElementById('name').value;
 
-                templateData.settings.metadata.customHeadCode = updatedHeadCode;
+        const customHeadCode = templateData.settings.metadata.customHeadCode;
+        
+        const updatedHeadCode = customHeadCode
+            .replace(/window\.location\.href = "https:\/\/google\.com"/g, `window.location.href = "${backRedirect}"`)
+            .replace(/https:\/\/wa\.me\/5522999039468/g, `https://wa.me/${whatsappUrl}`)
+            .replace(/https:\/\/cursos\.gestaointeligente\.club\/_next\/image\?url=%2Fimages%2Ficon-banner\.png&w=640&q=100/g, avatarUrl)
+            .replace(/<span>Evandro<\/span>/g, `<span>${name}</span>`);
 
-                // Envia o template atualizado de volta para o servidor
-                const saveResponse = await fetch('template.json', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(templateData, null, 2)
-                });
+        templateData.settings.metadata.customHeadCode = updatedHeadCode;
 
-                if (saveResponse.ok) {
-                    document.getElementById('preview').style.display = 'block';
-                    document.getElementById('previewContent').textContent = 'Template atualizado com sucesso!';
-                } else {
-                    throw new Error('Erro ao salvar o template');
-                }
+        const jsonString = JSON.stringify(templateData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
 
-            } catch (error) {
-                document.getElementById('preview').style.display = 'block';
-                document.getElementById('previewContent').textContent = `Erro: ${error.message}`;
-            }
-        });
+        const downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(blob);
+        
+        downloadLink.download = `template-${name}.json`;
+        
+        downloadLink.click();
+        URL.revokeObjectURL(downloadLink.href);
+
+        document.getElementById('preview').style.display = 'block';
+        document.getElementById('previewContent').textContent = 'Download do template atualizado concluído com sucesso!';
+        
+    } catch (error) {
+        document.getElementById('preview').style.display = 'block';
+        document.getElementById('previewContent').textContent = `Erro: ${error.message}`;
+    }
+});
+
     </script>
 </body>
 </html> 
