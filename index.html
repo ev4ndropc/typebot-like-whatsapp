@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Chat Configurator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #075e54;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="url"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        input[type="text"]:focus,
+        input[type="url"]:focus {
+            outline: none;
+            border-color: #25d366;
+            box-shadow: 0 0 5px rgba(37,211,102,0.3);
+        }
+
+        button {
+            background-color: #25d366;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #128c7e;
+        }
+
+        .preview {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+
+        .preview h2 {
+            color: #075e54;
+            margin-bottom: 15px;
+        }
+
+        .preview-content {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>WhatsApp Chat Configurator</h1>
+        <form id="configForm">
+            <div class="form-group">
+                <label for="backRedirect">Back Redirect URL:</label>
+                <input type="url" id="backRedirect" name="backRedirect" placeholder="https://example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="whatsappUrl">URL WhatsApp (apenas números):</label>
+                <input type="text" id="whatsappUrl" name="whatsappUrl" placeholder="5522999999999" required>
+            </div>
+
+            <div class="form-group">
+                <label for="avatarUrl">URL Avatar:</label>
+                <input type="url" id="avatarUrl" name="avatarUrl" placeholder="https://example.com/avatar.png" required>
+            </div>
+
+            <div class="form-group">
+                <label for="name">Nome:</label>
+                <input type="text" id="name" name="name" placeholder="Nome do contato" required>
+            </div>
+
+            <button type="submit">Atualizar Template</button>
+        </form>
+
+        <div class="preview" id="preview" style="display: none;">
+            <h2>Status:</h2>
+            <div class="preview-content" id="previewContent"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('configForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            try {
+                // Primeiro, busca o template.json atual
+                const response = await fetch('template.json');
+                const templateData = await response.json();
+
+                // Pegar valores do formulário
+                const backRedirect = document.getElementById('backRedirect').value;
+                const whatsappUrl = document.getElementById('whatsappUrl').value;
+                const avatarUrl = document.getElementById('avatarUrl').value;
+                const name = document.getElementById('name').value;
+
+                // Atualiza o customHeadCode no template
+                const customHeadCode = templateData.settings.metadata.customHeadCode;
+                
+                // Substitui as URLs e o nome no customHeadCode
+                const updatedHeadCode = customHeadCode
+                    .replace(/window\.location\.href = "https:\/\/google\.com"/g, `window.location.href = "${backRedirect}"`)
+                    .replace(/https:\/\/wa\.me\/5522999039468/g, `https://wa.me/${whatsappUrl}`)
+                    .replace(/https:\/\/cursos\.gestaointeligente\.club\/_next\/image\?url=%2Fimages%2Ficon-banner\.png&w=640&q=100/g, avatarUrl)
+                    .replace(/<span>Evandro<\/span>/g, `<span>${name}</span>`);
+
+                templateData.settings.metadata.customHeadCode = updatedHeadCode;
+
+                // Envia o template atualizado de volta para o servidor
+                const saveResponse = await fetch('template.json', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(templateData, null, 2)
+                });
+
+                if (saveResponse.ok) {
+                    document.getElementById('preview').style.display = 'block';
+                    document.getElementById('previewContent').textContent = 'Template atualizado com sucesso!';
+                } else {
+                    throw new Error('Erro ao salvar o template');
+                }
+
+            } catch (error) {
+                document.getElementById('preview').style.display = 'block';
+                document.getElementById('previewContent').textContent = `Erro: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html> 
